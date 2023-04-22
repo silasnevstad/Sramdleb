@@ -20,17 +20,21 @@ const HTML5toTouch = {
   ],
 };
 
-const LetterCard = ({ letter, index, onLetterSwap, feedback, gameResult }) => {
+const LetterCard = ({ letter, index, onLetterSwap, onCardClick, clickedIndex, feedback, gameResult }) => {
     const [isDragging, setIsDragging] = useState(false);
     const [isOver, setIsOver] = useState(false);
     const [opacity, setOpacity] = useState(1);
+
+    const handleClick = () => {
+      onCardClick(index);
+    };
   
     const [, drag, preview] = useDrag(() => ({
       type: 'letter',
       item: { index },
       collect: (monitor) => {
         setIsDragging(monitor.isDragging());
-        setOpacity(monitor.isDragging() ? 0.4 : 1);
+        setOpacity(monitor.isDragging() ? 0.8 : 1);
       },
     }));
   
@@ -46,6 +50,13 @@ const LetterCard = ({ letter, index, onLetterSwap, feedback, gameResult }) => {
         setIsOver(monitor.isOver() && monitor.getItem().index !== index);
       },
     }));
+
+    const className = `letter-card ${feedback ? 'correct' : ''} ${
+      isDragging ? 'dragging' : isOver ? 'hover' : ''
+    } ${gameResult === 'win' ? 'win' : gameResult === 'lost' ? 'lost' : ''} ${
+      clickedIndex === index ? 'clicked' : ''
+    }`;
+
   
     return (
         <div
@@ -53,10 +64,9 @@ const LetterCard = ({ letter, index, onLetterSwap, feedback, gameResult }) => {
           drag(drop(node));
           preview(node);
         }}
-        className={`letter-card ${feedback ? 'correct' : ''} ${
-          isDragging ? 'dragging' : isOver ? 'hover' : ''
-        } ${gameResult === 'win' ? 'win' : gameResult === 'lost' ? 'lost' : ''}`}
+        className={className}
         style={{ opacity }}
+        onClick={handleClick}
       >
         {letter}
       </div>
@@ -64,12 +74,25 @@ const LetterCard = ({ letter, index, onLetterSwap, feedback, gameResult }) => {
 };
   
 
-const WordDisplay = ({ word, feedback, onLetterSwap }) => {
+const WordDisplay = ({ word, feedback, onLetterSwap, decreaseMoveCounter }) => {
   const [isAnyDragging, setIsAnyDragging] = useState(false);
+  const [clickedIndex, setClickedIndex] = useState(null);
 
   const handleLetterSwap = (index1, index2) => {
     onLetterSwap(index1, index2);
+    decreaseMoveCounter();
     setIsAnyDragging(false);
+  };
+
+  const handleCardClick = (index) => {
+    if (clickedIndex === null) {
+      setClickedIndex(index);
+    } else if (clickedIndex === index) {
+      setClickedIndex(null);
+    } else {
+      handleLetterSwap(clickedIndex, index);
+      setClickedIndex(null);
+    }
   };
 
   return (
@@ -82,6 +105,8 @@ const WordDisplay = ({ word, feedback, onLetterSwap }) => {
             index={index}
             feedback={feedback[index]}
             onLetterSwap={handleLetterSwap}
+            onCardClick={handleCardClick}
+            clickedIndex={clickedIndex}
             isAnyDragging={isAnyDragging}
           />
         ))}
