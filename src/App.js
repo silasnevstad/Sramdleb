@@ -153,9 +153,6 @@ function App() {
     handleLetterSwap(randomIndex, currentWordIndex);
   };
 
-  
-  
-
   useEffect(() => {
     checkAndUpdateFeedback();
   }, [currentWord]);
